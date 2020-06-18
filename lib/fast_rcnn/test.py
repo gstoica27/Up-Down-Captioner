@@ -196,7 +196,7 @@ def vis_detections(im, class_name, dets, thresh=0.3, filename='vis.png'):
     im = im[:, :, (2, 1, 0)]
     plt.cla()
     plt.imshow(im)
-    for i in xrange(np.minimum(10, dets.shape[0])):
+    for i in range(np.minimum(10, dets.shape[0])):
         bbox = dets[i, :4]
         score = dets[i, -1]
         if score > thresh:
@@ -213,7 +213,7 @@ def vis_detections(im, class_name, dets, thresh=0.3, filename='vis.png'):
 def vis_multiple(im, class_names, all_boxes, filename='vis.png'):
     """Visual debugging of detections."""
     
-    print filename
+    print(filename)
     import matplotlib.pyplot as plt
     im = im[:, :, (2, 1, 0)]
     plt.cla()
@@ -221,12 +221,12 @@ def vis_multiple(im, class_names, all_boxes, filename='vis.png'):
     
     max_boxes = 10
     image_scores = np.hstack([all_boxes[j][:, 4]
-          for j in xrange(1, len(class_names))])
+          for j in range(1, len(class_names))])
     if len(image_scores) > 10:
         image_thresh = np.sort(image_scores)[-max_boxes]
     else:
         image_thresh = -np.inf
-    for j in xrange(1, len(class_names)):
+    for j in range(1, len(class_names)):
         keep = np.where(all_boxes[j][:, 4] >= image_thresh)[0]
         dets = all_boxes[j][keep, :]
         for i in range(dets.shape[0]):
@@ -257,10 +257,10 @@ def apply_nms(all_boxes, thresh):
     """
     num_classes = len(all_boxes)
     num_images = len(all_boxes[0])
-    nms_boxes = [[[] for _ in xrange(num_images)]
-                 for _ in xrange(num_classes)]
-    for cls_ind in xrange(num_classes):
-        for im_ind in xrange(num_images):
+    nms_boxes = [[[] for _ in range(num_images)]
+                 for _ in range(num_classes)]
+    for cls_ind in range(num_classes):
+        for im_ind in range(num_images):
             dets = all_boxes[cls_ind][im_ind]
             if dets == []:
                 continue
@@ -279,13 +279,13 @@ def test_net(net, imdb, max_per_image=400, thresh=-np.inf, vis=False, load_cache
     # all detections are collected into:
     #    all_boxes[cls][image] = N x 5 array of detections in
     #    (x1, y1, x2, y2, score)
-    all_boxes = [[[] for _ in xrange(num_images)]
-                 for _ in xrange(imdb.num_classes)]
+    all_boxes = [[[] for _ in range(num_images)]
+                 for _ in range(imdb.num_classes)]
 
     output_dir = get_output_dir(imdb, net)
     det_file = os.path.join(output_dir, 'detections.pkl')
     if load_cache and os.path.exists(det_file):
-        print 'Loading pickled detections from %s' % det_file
+        print('Loading pickled detections from %s' % det_file)
         with open(det_file, 'rb') as f:
             all_boxes = cPickle.load(f)
     
@@ -296,7 +296,7 @@ def test_net(net, imdb, max_per_image=400, thresh=-np.inf, vis=False, load_cache
         if not cfg.TEST.HAS_RPN:
             roidb = imdb.roidb
 
-        for i in xrange(num_images):
+        for i in range(num_images):
             # filter out any ground truth boxes
             if cfg.TEST.HAS_RPN:
                 box_proposals = None
@@ -315,7 +315,7 @@ def test_net(net, imdb, max_per_image=400, thresh=-np.inf, vis=False, load_cache
 
             _t['misc'].tic()
             # skip j = 0, because it's the background class
-            for j in xrange(1, imdb.num_classes):
+            for j in range(1, imdb.num_classes):
                 inds = np.where(scores[:, j] > thresh)[0]
                 cls_scores = scores[inds, j]
                 if cfg.TEST.AGNOSTIC:
@@ -333,21 +333,21 @@ def test_net(net, imdb, max_per_image=400, thresh=-np.inf, vis=False, load_cache
             # Limit to max_per_image detections *over all classes*
             if max_per_image > 0:
                 image_scores = np.hstack([all_boxes[j][i][:, 4]
-                                          for j in xrange(1, imdb.num_classes)])
+                                          for j in range(1, imdb.num_classes)])
                 if len(image_scores) > max_per_image:
                     image_thresh = np.sort(image_scores)[-max_per_image]
-                    for j in xrange(1, imdb.num_classes):
+                    for j in range(1, imdb.num_classes):
                         keep = np.where(all_boxes[j][i][:, 4] >= image_thresh)[0]
                         all_boxes[j][i] = all_boxes[j][i][keep, :]                        
                         
             _t['misc'].toc()
 
-            print 'im_detect: {:d}/{:d} {:.3f}s {:.3f}s' \
+            print('im_detect: {:d}/{:d} {:.3f}s {:.3f}s' \
                   .format(i + 1, num_images, _t['im_detect'].average_time,
-                          _t['misc'].average_time)
+                          _t['misc'].average_time))
 
         with open(det_file, 'wb') as f:
             cPickle.dump(all_boxes, f, cPickle.HIGHEST_PROTOCOL)
 
-    print 'Evaluating detections'
+    print('Evaluating detections')
     imdb.evaluate_detections(all_boxes, output_dir)
